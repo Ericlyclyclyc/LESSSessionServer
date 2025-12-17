@@ -4,13 +4,14 @@ import org.lyc122.dev.mcless.sessionserver.util.PlayerState;
 
 import java.util.UUID;
 
-public class Player {
+public class PlayerElement {
     public UUID uuid;
     public long onlineTime;
     public long totalOnlineTime;
     public UUID SessionId;
     public String server;
     public PlayerState state;
+    public SessionElement session;
 
     public UUID getUuid() {
         return uuid;
@@ -59,4 +60,13 @@ public class Player {
     public PlayerState getState(){
         return state;
     }
+
+    public void setSession(SessionElement session){
+        this.session = session;
+    }
+
+    public SessionElement getSession(){
+        return session;
+    }
+
 }
