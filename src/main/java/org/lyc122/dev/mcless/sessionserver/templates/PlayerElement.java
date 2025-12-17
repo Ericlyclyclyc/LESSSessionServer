@@ -8,7 +8,7 @@ public class PlayerElement {
     public UUID uuid;
     public long onlineTime;
     public long totalOnlineTime;
-    public UUID SessionId;
+    public UUID sessionId;  // fix naming
     public String server;
     public PlayerState state;
     public SessionElement session;
@@ -38,11 +38,11 @@ public class PlayerElement {
     }
 
     public UUID getSessionId() {
-        return SessionId;
+        return sessionId;
     }
 
     public void setSessionId(UUID sessionId) {
-        SessionId = sessionId;
+        this.sessionId = sessionId;
     }
 
     public String getServer() {
@@ -69,4 +69,24 @@ public class PlayerElement {
         return session;
     }
 
+    public PlayerElement(UUID playerUUID){
+        this.uuid = playerUUID;
+        this.session = null;
+        this.server = "";
+        this.state = PlayerState.OFFLINE;
+        this.sessionId = null;
+        this.totalOnlineTime = 0;
+        this.onlineTime = 0;
+    }
+
+    /**
+     * <b>Warning</b>: This is only a constructor for <b>unknown player</b>.
+     * <br/>
+     * Please construct with the player's UUID.
+     * <br/>
+     * Or use setUUID(UUID) to set it later.
+     */
+    public PlayerElement(){
+
+    }
 }

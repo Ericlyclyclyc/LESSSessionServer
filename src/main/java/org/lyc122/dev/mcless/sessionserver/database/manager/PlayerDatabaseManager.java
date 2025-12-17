@@ -9,7 +9,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
+import java.util.Date;
 public class PlayerDatabaseManager extends BaseDatabaseManager {
 
     @Override
@@ -33,13 +33,13 @@ public class PlayerDatabaseManager extends BaseDatabaseManager {
     public void upsertPlayer(PlayerElement player) {
         String sql = "INSERT INTO player_session (player_uuid, online_time, total_online_time, server, state, session_id, created_at, updated_at) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
-                "ON DUPLICATE KEY UPDATE " +
-                "online_time=VALUES(online_time), " +
-                "total_online_time=VALUES(total_online_time), " +
-                "server=VALUES(server), " +
-                "state=VALUES(state), " +
-                "session_id=VALUES(session_id), " +
-                "updated_at=VALUES(updated_at)";
+                "ON CONFLICT(player_uuid) DO UPDATE SET " +
+                "online_time=excluded.online_time, " +
+                "total_online_time=excluded.total_online_time, " +
+                "server=excluded.server, " +
+                "state=excluded.state, " +
+                "session_id=excluded.session_id, " +
+                "updated_at=excluded.updated_at";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, player.getUuid().toString());
@@ -92,7 +92,9 @@ public class PlayerDatabaseManager extends BaseDatabaseManager {
         }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-            setParameters(stmt, params);
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
             ResultSet rs = stmt.executeQuery();
             List<PlayerElement> players = new ArrayList<>();
             while (rs.next()) {
@@ -153,7 +155,10 @@ public class PlayerDatabaseManager extends BaseDatabaseManager {
         player.setTotalOnlineTime(rs.getLong("total_online_time"));
         player.setServer(rs.getString("server"));
         player.setState(PlayerState.valueOf(rs.getString("state")));
-        player.setSessionId(UUID.fromString(rs.getString("session_id")));
+        String sessionIdStr = rs.getString("session_id");
+        if (sessionIdStr != null && !sessionIdStr.isEmpty()) {
+            player.setSessionId(UUID.fromString(sessionIdStr));
+        }
         return player;
     }
 }

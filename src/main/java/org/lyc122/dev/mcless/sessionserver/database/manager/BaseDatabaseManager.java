@@ -1,6 +1,5 @@
 package org.lyc122.dev.mcless.sessionserver.database.manager;
 
-import org.lyc122.dev.mcless.sessionserver.database.exception.DatabaseInitializingException;
 import org.lyc122.dev.mcless.sessionserver.database.exception.DatabaseOperationException;
 
 import java.sql.Connection;
@@ -19,13 +18,20 @@ public abstract class BaseDatabaseManager {
         }
     }
 
-    protected abstract void initialize() throws DatabaseInitializingException;
+    protected abstract void initialize() throws DatabaseOperationException;
 
     public void close() {
         if (connection != null) {
             try {
                 connection.close();
-            } catch (SQLException ignored) {}
+            } catch (SQLException e) {
+                // 记录日志
+                e.printStackTrace();
+            }
         }
+    }
+
+    protected void handleDatabaseError(SQLException e) {
+        throw new DatabaseOperationException("Database operation failed", e);
     }
 }
