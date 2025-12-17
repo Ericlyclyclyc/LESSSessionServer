@@ -16,7 +16,8 @@ public class SessionDatabaseManager extends BaseDatabaseManager {
 
     @Override
     protected void initialize() {
-        try (Statement stmt = connection.createStatement()) {
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
             String sql = "CREATE TABLE IF NOT EXISTS session_table (" +
                     "session_uuid CHAR(36) PRIMARY KEY COMMENT '会话唯一标识'," +
                     "player_uuid CHAR(36) COMMENT '玩家唯一标识'," +
@@ -43,7 +44,8 @@ public class SessionDatabaseManager extends BaseDatabaseManager {
                 "scope=excluded.scope, " +
                 "updated_at=excluded.updated_at";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, session.getUuid().toString());
             stmt.setString(2, session.getPlayer().getUuid().toString());
             stmt.setString(3, DatetimeFormatter.formatToIso(session.getStartTime()));
@@ -60,7 +62,8 @@ public class SessionDatabaseManager extends BaseDatabaseManager {
 
     public SessionElement getSessionByUuid(UUID uuid) {
         String sql = "SELECT * FROM session_table WHERE session_uuid = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, uuid.toString());
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
@@ -74,7 +77,8 @@ public class SessionDatabaseManager extends BaseDatabaseManager {
 
     public List<SessionElement> getAllSessions() {
         String sql = "SELECT * FROM session_table";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             ResultSet rs = stmt.executeQuery();
             List<SessionElement> sessions = new ArrayList<>();
             while (rs.next()) {
@@ -102,7 +106,8 @@ public class SessionDatabaseManager extends BaseDatabaseManager {
 
     public void terminateSession(UUID sessionUuid) {
         String sql = "UPDATE session_table SET state = ?, terminate_time = ? WHERE session_uuid = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, SessionState.TERMINATED.name());
             stmt.setString(2, DatetimeFormatter.formatToIso(new Date()));
             stmt.setString(3, sessionUuid.toString());
@@ -114,7 +119,8 @@ public class SessionDatabaseManager extends BaseDatabaseManager {
 
     public List<SessionElement> getSessionsByPlayer(UUID playerUuid) {
         String sql = "SELECT * FROM session_table WHERE player_uuid = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, playerUuid.toString());
             ResultSet rs = stmt.executeQuery();
             List<SessionElement> sessions = new ArrayList<>();
