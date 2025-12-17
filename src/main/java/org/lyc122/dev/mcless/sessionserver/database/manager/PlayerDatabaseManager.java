@@ -2,7 +2,7 @@ package org.lyc122.dev.mcless.sessionserver.database.manager;
 
 import org.lyc122.dev.mcless.sessionserver.database.exception.DatabaseOperationException;
 import org.lyc122.dev.mcless.sessionserver.templates.PlayerElement;
-import org.lyc122.dev.mcless.sessionserver.util.PlayerState;
+import org.lyc122.dev.mcless.sessionserver.state.PlayerState;
 import org.lyc122.dev.mcless.sessionserver.util.DatetimeFormatter;
 
 import java.sql.*;

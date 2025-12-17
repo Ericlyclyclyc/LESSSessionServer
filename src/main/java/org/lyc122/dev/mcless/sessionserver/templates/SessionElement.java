@@ -1,7 +1,7 @@
 package org.lyc122.dev.mcless.sessionserver.templates;
 
 import org.jetbrains.annotations.Nullable;
-import org.lyc122.dev.mcless.sessionserver.util.SessionState;
+import org.lyc122.dev.mcless.sessionserver.state.SessionState;
 
 import java.util.Date;
 import java.util.Set;

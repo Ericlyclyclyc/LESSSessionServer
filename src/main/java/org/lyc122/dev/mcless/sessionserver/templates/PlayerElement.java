@@ -1,6 +1,6 @@
 package org.lyc122.dev.mcless.sessionserver.templates;
 
-import org.lyc122.dev.mcless.sessionserver.util.PlayerState;
+import org.lyc122.dev.mcless.sessionserver.state.PlayerState;
 
 import java.util.UUID;
 

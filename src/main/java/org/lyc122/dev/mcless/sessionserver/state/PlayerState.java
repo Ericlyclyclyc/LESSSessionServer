@@ -1,4 +1,4 @@
-package org.lyc122.dev.mcless.sessionserver.util;
+package org.lyc122.dev.mcless.sessionserver.state;
 
 public enum PlayerState {
     ONLINE(0),
