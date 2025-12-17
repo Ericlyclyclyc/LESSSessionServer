@@ -9,7 +9,7 @@ public enum SessionState {
     private final int code;
 
     // 私有构造函数
-    private SessionState(int code) {
+    SessionState(int code) {
         this.code = code;
     }
 

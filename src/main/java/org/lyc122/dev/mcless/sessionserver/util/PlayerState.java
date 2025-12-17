@@ -8,7 +8,7 @@ public enum PlayerState {
     private final int code;
 
     //私有构造函数
-    private PlayerState(int code){
+    PlayerState(int code){
         this.code = code;
     }
     //获取响应码
