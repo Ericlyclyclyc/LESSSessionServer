@@ -7,8 +7,12 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.HexFormat;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 public class EndpointServer {
     private final int port;
@@ -20,7 +24,7 @@ public class EndpointServer {
     public EndpointServer(int port, HttpHandler handler) {
         this.port = port;
         this.handler = handler;
-        this.threadPool = Executors.newFixedThreadPool(10); // Fixed thread pool
+        this.threadPool = Executors.newFixedThreadPool(10,exceptionHandlingFactory); // Fixed thread pool
     }
 
     public void start() throws IOException {
@@ -30,7 +34,6 @@ public class EndpointServer {
 
         serverSocket = new ServerSocket(port);
         isRunning = true;
-
         System.out.println("HTTP Server started on port " + port);
 
         while (isRunning) {
@@ -131,4 +134,24 @@ public class EndpointServer {
         outputStream.write(response.getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
     }
+
+    ThreadFactory exceptionHandlingFactory = r -> {
+        Random random = new Random(new Date().hashCode());
+        byte[] bytes = new byte[4];
+        random.nextBytes(bytes);
+        String id = HexFormat.of().formatHex(bytes);
+        Thread t = new Thread(r, "ApiRequestHandling-thread-"+id);
+        t.setUncaughtExceptionHandler((thread, throwable) -> {
+            StringBuilder em = new StringBuilder();
+            em.append("Error in Api handling subthread:\n");
+            em.append("=== Thread id: ").append(thread.getName()).append(" === State: ").append(thread.getState()).append(" ===\n");
+            em.append("Error type: ").append(throwable.getClass().getName()).append("\n");
+            em.append("Stack trace:\n");
+            for( StackTraceElement stackTraceElement : throwable.getStackTrace()){
+                em.append(stackTraceElement).append("\n");
+            }
+            System.out.println(em);
+        });
+        return t;
+    };
 }

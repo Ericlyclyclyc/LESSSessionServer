@@ -6,6 +6,7 @@ import java.io.OutputStream;
  * HTTP Request parsing interface
  */
 public interface HttpHandler extends Runnable {
+
     /**
      * Handle http requests
      * @param path request path
