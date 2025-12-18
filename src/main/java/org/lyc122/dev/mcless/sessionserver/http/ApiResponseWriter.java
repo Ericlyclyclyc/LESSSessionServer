@@ -1,17 +1,12 @@
 package org.lyc122.dev.mcless.sessionserver.http;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ApiResponseWriter {
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 向输出流写入HTTP响应
@@ -39,7 +34,7 @@ public class ApiResponseWriter {
             int statusCode,
             String statusMessage,
             JsonNode jsonNode
-    ) throws JsonProcessingException {
+    ) {
         // 创建响应头
         String headers = "HTTP/1.1 " + statusCode + " " + statusMessage + "\r\n" +
                 "Content-Type: application/json; charset=UTF-8\r\n" +
@@ -50,6 +45,6 @@ public class ApiResponseWriter {
                 "\r\n";
 
         // 组合完整响应报文
-        return headers + jsonNode.toString();
+        return headers + jsonNode;
     }
 }
