@@ -21,6 +21,7 @@ public class EndpointServer {
     public EndpointServer(int port, HttpHandler handler) {
         this.port = port;
         this.handler = handler;
+
         ThreadFactory exceptionHandlingFactory = r -> {
             Random random = new Random(new Date().hashCode());
             byte[] bytes = new byte[4];
@@ -32,14 +33,27 @@ public class EndpointServer {
                 em.append("Error in Api handling subthread:\n");
                 em.append("=== Thread id: ").append(thread.getName()).append(" === State: ").append(thread.getState()).append(" ===\n");
                 em.append("Error type: ").append(throwable.getClass().getName()).append("\n");
+                em.append("Error message: ").append(throwable.getMessage()).append("\n");
                 em.append("Stack trace:\n");
                 for (StackTraceElement stackTraceElement : throwable.getStackTrace()) {
-                    em.append(stackTraceElement).append("\n");
+                    em.append("\tat ").append(stackTraceElement.toString()).append("\n");
                 }
-                System.out.println(em);
+
+                // 如果有 cause，递归打印
+                Throwable cause = throwable.getCause();
+                while (cause != null) {
+                    em.append("Caused by: ").append(cause.getClass().getName()).append(": ").append(cause.getMessage()).append("\n");
+                    for (StackTraceElement stackTraceElement : cause.getStackTrace()) {
+                        em.append("\tat ").append(stackTraceElement.toString()).append("\n");
+                    }
+                    cause = cause.getCause();
+                }
+
+                System.err.println(em.toString());
             });
             return t;
         };
+
         this.threadPool = Executors.newFixedThreadPool(10, exceptionHandlingFactory);
     }
 
@@ -60,11 +74,13 @@ public class EndpointServer {
                         handleClient(clientSocket);
                     } catch (IOException e) {
                         System.err.println("Error handling client: " + e.getMessage());
+                        e.printStackTrace();
                     }
                 });
             } catch (IOException e) {
                 if (isRunning) {
                     System.err.println("Accept error: " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
         }
@@ -114,10 +130,39 @@ public class EndpointServer {
                 }
             }
 
-            // Read body - handle case where there's no Content-Length
-            String requestBody = "";
+            // Read body
+            String requestBody = readRequestBody(reader, contentLength, method);
+
+            // Handle request
+            handler.handle(path, contentType, requestBody, outputStream);
+
+        } catch (Exception e) {
+            StringBuilder em = new StringBuilder();
+            em.append("Unexpected error in handling client:\n");
+            em.append("Exception type: ").append(e.getClass().getName()).append("\n");
+            em.append("Exception message: ").append(e.getMessage()).append("\n");
+            em.append("Stack trace:\n");
+            for (StackTraceElement stackTraceElement : e.getStackTrace()) {
+                em.append("\tat ").append(stackTraceElement.toString()).append("\n");
+            }
+
+            // 如果有 cause，递归打印
+            Throwable cause = e.getCause();
+            while (cause != null) {
+                em.append("Caused by: ").append(cause.getClass().getName()).append(": ").append(cause.getMessage()).append("\n");
+                for (StackTraceElement stackTraceElement : cause.getStackTrace()) {
+                    em.append("\tat ").append(stackTraceElement.toString()).append("\n");
+                }
+                cause = cause.getCause();
+            }
+
+            System.err.println(em.toString());
+        }
+    }
+
+    private String readRequestBody(BufferedReader reader, Integer contentLength, String method) throws IOException {
+        if ("POST".equalsIgnoreCase(method)) {
             if (contentLength != null && contentLength > 0) {
-                // Read exactly contentLength characters
                 char[] buffer = new char[contentLength];
                 int totalRead = 0;
                 while (totalRead < contentLength) {
@@ -125,26 +170,19 @@ public class EndpointServer {
                     if (read == -1) break;
                     totalRead += read;
                 }
-                requestBody = new String(buffer, 0, totalRead);
-            } else if (contentLength == null) {
-                // No Content-Length header - read until EOF for POST requests
-                if ("POST".equalsIgnoreCase(method)) {
-                    StringBuilder bodyBuilder = new StringBuilder();
-                    char[] buffer = new char[1024];
-                    int read;
-                    while ((read = reader.read(buffer)) != -1) {
-                        bodyBuilder.append(buffer, 0, read);
-                    }
-                    requestBody = bodyBuilder.toString();
+                return new String(buffer, 0, totalRead);
+            } else {
+                // No Content-Length header - read until EOF
+                StringBuilder bodyBuilder = new StringBuilder();
+                char[] buffer = new char[1024];
+                int read;
+                while ((read = reader.read(buffer)) != -1) {
+                    bodyBuilder.append(buffer, 0, read);
                 }
+                return bodyBuilder.toString();
             }
-
-            // Handle request
-            handler.handle(path, contentType, requestBody, outputStream);
-
-        } catch (Exception e) {
-            System.err.println("Unexpected error in handling client: " + e.getMessage());
         }
+        return "";
     }
 
     public void stop() throws IOException {
@@ -167,5 +205,4 @@ public class EndpointServer {
         outputStream.write(response.getBytes(StandardCharsets.UTF_8));
         outputStream.flush();
     }
-
 }
