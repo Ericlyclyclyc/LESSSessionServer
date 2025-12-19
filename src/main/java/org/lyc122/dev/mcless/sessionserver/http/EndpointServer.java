@@ -49,7 +49,7 @@ public class EndpointServer {
                     cause = cause.getCause();
                 }
 
-                System.err.println(em.toString());
+                System.err.println(em);
             });
             return t;
         };
@@ -73,14 +73,12 @@ public class EndpointServer {
                     try {
                         handleClient(clientSocket);
                     } catch (IOException e) {
-                        System.err.println("Error handling client: " + e.getMessage());
-                        e.printStackTrace();
+                        Thread.currentThread().getUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
                     }
                 });
             } catch (IOException e) {
                 if (isRunning) {
-                    System.err.println("Accept error: " + e.getMessage());
-                    e.printStackTrace();
+                    Thread.currentThread().getUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
                 }
             }
         }
@@ -137,26 +135,7 @@ public class EndpointServer {
             handler.handle(path, contentType, requestBody, outputStream);
 
         } catch (Exception e) {
-            StringBuilder em = new StringBuilder();
-            em.append("Unexpected error in handling client:\n");
-            em.append("Exception type: ").append(e.getClass().getName()).append("\n");
-            em.append("Exception message: ").append(e.getMessage()).append("\n");
-            em.append("Stack trace:\n");
-            for (StackTraceElement stackTraceElement : e.getStackTrace()) {
-                em.append("\tat ").append(stackTraceElement.toString()).append("\n");
-            }
-
-            // 如果有 cause，递归打印
-            Throwable cause = e.getCause();
-            while (cause != null) {
-                em.append("Caused by: ").append(cause.getClass().getName()).append(": ").append(cause.getMessage()).append("\n");
-                for (StackTraceElement stackTraceElement : cause.getStackTrace()) {
-                    em.append("\tat ").append(stackTraceElement.toString()).append("\n");
-                }
-                cause = cause.getCause();
-            }
-
-            System.err.println(em.toString());
+            Thread.currentThread().getUncaughtExceptionHandler().uncaughtException(Thread.currentThread(), e);
         }
     }
 
